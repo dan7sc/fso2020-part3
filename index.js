@@ -27,6 +27,11 @@ app.get('/api/persons/:id', (req, res) => {
 
 app.post('/api/persons', (req, res) => {
     const body = req.body
+    const existPerson = persons.map(person => person.name === body.name).includes(true)
+    if (existPerson)
+        return res.status(400).json({error: 'name must be unique'})
+    if (body.name === '' || body.number === '')
+        return res.status(400).json({error: 'name or number is missing'})
     const newPerson = {
         name: body.name,
         number: body.number,
