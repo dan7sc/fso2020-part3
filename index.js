@@ -1,11 +1,10 @@
 const express = require('express')
-const PERSONS = require('./db.json')
+const persons = require('./db.json')
 
 const app = express()
 const PORT = 3001
 
 app.get('/info', (req, res) => {
-    const persons = PERSONS.persons
     const size = persons.length
     const date = new Date().toString()
     const response = `<p>Phonebook has info for ${size} people</p>` +
@@ -14,7 +13,14 @@ app.get('/info', (req, res) => {
 })
 
 app.get('/api/persons', (req, res) => {
-    res.json(PERSONS)
+    res.json(persons)
+})
+
+app.get('/api/persons/:id', (req, res) => {
+    const id = Number.parseInt(req.params.id)
+    const person = persons.find(person => person.id === id)
+    if (person) res.status(200).json(person)
+    else res.status(404).end()
 })
 
 app.listen(PORT, () => {
