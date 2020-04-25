@@ -4,6 +4,8 @@ let persons = require('./db.json')
 const app = express()
 const PORT = 3001
 
+app.use(express.json())
+
 app.get('/info', (req, res) => {
     const size = persons.length
     const date = new Date().toString()
@@ -23,6 +25,17 @@ app.get('/api/persons/:id', (req, res) => {
     else res.status(404).end()
 })
 
+app.post('/api/persons', (req, res) => {
+    const body = req.body
+    const newPerson = {
+        name: body.name,
+        number: body.number,
+        id: generateId()
+    }
+    persons = persons.concat(newPerson)
+    res.status(201).json(newPerson)
+})
+
 app.delete('/api/persons/:id', (req, res) => {
     const id = Number.parseInt(req.params.id)
     persons = persons.filter(person => person.id !== id)
@@ -32,3 +45,10 @@ app.delete('/api/persons/:id', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
+
+const generateId = () => {
+    const min = 999999
+    const max = 9999999999999999
+    const id = Math.floor(Math.random() * (max - min)) + min
+    return id
+}
