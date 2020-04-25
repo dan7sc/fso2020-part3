@@ -1,5 +1,6 @@
 const express = require('express')
 const morgan = require('morgan')
+const cors = require('cors')
 let persons = require('./db.json')
 
 const app = express()
@@ -11,6 +12,7 @@ morgan.token('type', (req, res) => {
 
 app.use(express.json())
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :type'))
+app.use(cors())
 
 app.get('/info', (req, res) => {
     const size = persons.length
