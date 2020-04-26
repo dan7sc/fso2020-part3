@@ -37,20 +37,20 @@ app.get('/api/persons/:id', (req, res) => {
     })
 })
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', async (req, res) => {
     const body = req.body
-    const existPerson = persons.map(person => person.name === body.name).includes(true)
+    const existPerson = await Person.findOne({name: body.name})
     if (existPerson)
         return res.status(400).json({error: 'name must be unique'})
     if (body.name === '' || body.number === '')
         return res.status(400).json({error: 'name or number is missing'})
-    const newPerson = {
+    const person = new Person({
         name: body.name,
         number: body.number,
-        id: generateId()
-    }
-    persons = persons.concat(newPerson)
-    res.status(201).json(newPerson)
+    })
+    person.save().then(savedPerson => {
+        res.status(201).json(savedPerson.toJSON())
+    })
 })
 
 app.delete('/api/persons/:id', (req, res) => {
@@ -62,10 +62,3 @@ app.delete('/api/persons/:id', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
-
-const generateId = () => {
-    const min = 999999
-    const max = 9999999999999999
-    const id = Math.floor(Math.random() * (max - min)) + min
-    return id
-}
