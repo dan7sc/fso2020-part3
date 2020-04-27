@@ -43,19 +43,11 @@ app.get('/api/persons/:id', (req, res, next) => {
         .catch(error => next(error))
 })
 
-
-
 app.post('/api/persons', async (req, res, next) => {
     const body = req.body
     const existPerson = await Person.findOne({name: body.name})
     if (body.name === '' || body.number === '')
         return res.status(400).json({error: 'name or number is missing'})
-    if (existPerson) {
-        req.params.id = existPerson._id
-        req.method = 'PUT'
-        req.originalUrl = `/api/persons/${req.params.id}`
-        return next()
-    }
     const person = new Person({
         name: body.name,
         number: body.number,
@@ -63,18 +55,6 @@ app.post('/api/persons', async (req, res, next) => {
     person.save()
         .then(savedPerson => {
             res.status(201).json(savedPerson.toJSON())
-        })
-        .catch(error => next(error))
-}, (req, res, next) => {
-    const body = req.body
-    const id = req.params.id
-    const person = {
-        name: body.name,
-        number: body.number
-    }
-    Person.findByIdAndUpdate(id, person, {new: true})
-        .then(updatedPerson => {
-            res.json(updatedPerson.toJSON())
         })
         .catch(error => next(error))
 })
@@ -108,6 +88,8 @@ const errorHandler = (error, req, res, next) => {
     console.log(error.message)
     if (error.name === 'CastError') {
         return res.status(400).send({error: 'invalid id'})
+    } else if (error.name === 'ValidationError') {
+        return res.status(400).send({error: error.message})
     }
     next(error)
 }
