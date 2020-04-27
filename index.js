@@ -24,20 +24,24 @@ app.get('/info', (req, res) => {
     res.send(response)
 })
 
-app.get('/api/persons', (req, res) => {
-    Person.find({}).then(persons => {
-        res.json(persons.map(person => person.toJSON()))
-    })
+app.get('/api/persons', (req, res, next) => {
+    Person.find({})
+        .then(persons => {
+            res.json(persons.map(person => person.toJSON()))
+        })
+        .catch(error => next(error))
 })
 
-app.get('/api/persons/:id', (req, res) => {
+app.get('/api/persons/:id', (req, res, next) => {
     const id = req.params.id
-    Person.findById(id).then(person => {
-        res.json(person.toJSON())
-    })
+    Person.findById(id)
+        .then(person => {
+            res.json(person.toJSON())
+        })
+        .catch(error => next(error))
 })
 
-app.post('/api/persons', async (req, res) => {
+app.post('/api/persons', async (req, res, next) => {
     const body = req.body
     const existPerson = await Person.findOne({name: body.name})
     if (existPerson)
@@ -48,20 +52,32 @@ app.post('/api/persons', async (req, res) => {
         name: body.name,
         number: body.number,
     })
-    person.save().then(savedPerson => {
-        res.status(201).json(savedPerson.toJSON())
-    })
+    person.save()
+        .then(savedPerson => {
+            res.status(201).json(savedPerson.toJSON())
+        })
+        .catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (req, res) => {
+app.delete('/api/persons/:id', (req, res, next) => {
     const body = req.body
     const id = req.params.id
     Person.findByIdAndRemove(id)
         .then(result => {
             res.status(204).end()
         })
-        .catch(error => res.status(400).send({error}))
+        .catch(error => next(error))
 })
+
+const errorHandler = (error, req, res, next) => {
+    console.log(error.message)
+    if (error.name === 'CastError') {
+        return res.status(400).send({error: 'invalid id'})
+    }
+    next(error)
+}
+app.use(errorHandler)
+
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
