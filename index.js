@@ -41,13 +41,19 @@ app.get('/api/persons/:id', (req, res, next) => {
         .catch(error => next(error))
 })
 
+
+
 app.post('/api/persons', async (req, res, next) => {
     const body = req.body
     const existPerson = await Person.findOne({name: body.name})
-    if (existPerson)
-        return res.status(400).json({error: 'name must be unique'})
     if (body.name === '' || body.number === '')
         return res.status(400).json({error: 'name or number is missing'})
+    if (existPerson) {
+        req.params.id = existPerson._id
+        req.method = 'PUT'
+        req.originalUrl = `/api/persons/${req.params.id}`
+        return next()
+    }
     const person = new Person({
         name: body.name,
         number: body.number,
@@ -57,6 +63,33 @@ app.post('/api/persons', async (req, res, next) => {
             res.status(201).json(savedPerson.toJSON())
         })
         .catch(error => next(error))
+}, (req, res, next) => {
+    const body = req.body
+    const id = req.params.id
+    const person = {
+        name: body.name,
+        number: body.number
+    }
+    Person.findByIdAndUpdate(id, person, {new: true})
+        .then(updatedPerson => {
+            res.json(updatedPerson.toJSON())
+        })
+        .catch(error => console.log(error))
+})
+
+app.put('/api/persons/:id', (req, res, next) => {
+    const body = req.body
+    const id = req.params.id
+    const person = {
+        name: body.name,
+        number: body.number
+    }
+    person.number = req.body.number
+    Person.findByIdAndUpdate(id, person, {new: true})
+        .then(updatedPerson => {
+            res.json(updatedPerson.toJSON())
+        })
+        .catch(error => console.log(error))
 })
 
 app.delete('/api/persons/:id', (req, res, next) => {
